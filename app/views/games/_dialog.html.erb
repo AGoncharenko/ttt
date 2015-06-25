@@ -1,0 +1,35 @@
+<div id="dialog" title="Please enter your name">
+  <%= form_for :game, url: { action: "save_user" }, remote: true, html: {id: 'save_user'} do |f| %>
+    <%= f.label :player_name %>
+    <%= f.text_field :player_name %>
+    <%= f.hidden_field :id %>
+  <% end %>
+</div>
+<script>
+  var dialog = $( "#dialog" ).dialog({
+    autoOpen: false,
+    show: {
+      effect: "blind",
+      duration: 500
+    },
+    hide: {
+      effect: "explode",
+      duration: 500
+    },
+    buttons: {
+      Submit: function(){
+        $.ajax({
+          url: "<%= save_user_path %>",
+          type: 'POST',
+          dataType: "json",
+          data: $('#save_user').serialize(),
+          success: function(data){
+            $('#'+data.player['role']).html(data.player['name'])
+            $('#'+data.player['role']).attr('data-id', data.player['id'])
+          }
+            });
+        dialog.dialog( "close" );
+      }
+    }
+  });
+</script>

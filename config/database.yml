@@ -1,0 +1,20 @@
+development:
+  adapter: postgresql
+  encoding: unicode
+  database: ttt_development
+  pool: 5
+  host: localhost
+  username: postgres
+  password:
+
+test: &test
+  adapter: postgresql
+  encoding: unicode
+  database: ttt_test
+  pool: 5
+  host: localhost
+  username: postgres
+  password:
+
+cucumber:
+  <<: *test

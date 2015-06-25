@@ -1,0 +1,20 @@
+<h1>Leader board</h1>
+<%= link_to 'New Game', new_game_path%>
+<table class="leader_board">
+  <tr>
+    <th>Game id</th>
+    <th>Player 1</th>
+    <th>Player 2</th>
+    <th>Result</th>
+  </tr>
+  <tbody>
+  <% @games.each do |game| %>
+    <tr>
+      <td><%= game.id %></td>
+      <td><%= game.player_first.try(:name) %></td>
+      <td><%= game.player_second.try(:name) %></td>
+      <td><%= game.result %></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>

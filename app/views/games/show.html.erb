@@ -1,0 +1,96 @@
+<h1>Game <%= @game.id %></h1>
+<p>Player 1: <span class="players" id="player_first" data-id="<%= @game.try(:player_first).try(:id) %>" <% if @game.player_id_turn == @game.player_1_id %>style="background-color: red" <% end %>><%= @game.try(:player_first).try(:name) %></span></p>
+<p>Player 2: <span class="players" id="player_second" data-id="<%= @game.try(:player_second).try(:id) %>"  <% if @game.player_id_turn == @game.player_2_id %>style="background-color: red" <% end %>><%= @game.try(:player_second).try(:name) %></span></p>
+<table class="game_board">
+  <tr>
+    <td data-cell="cell_0"><%= @game.cells['cell_0'] %></td>
+    <td data-cell="cell_1"><%= @game.cells['cell_1'] %></td>
+    <td data-cell="cell_2"><%= @game.cells['cell_2'] %></td>
+  </tr>
+  <tr>
+    <td data-cell="cell_3"><%= @game.cells['cell_3'] %></td>
+    <td data-cell="cell_4"><%= @game.cells['cell_4'] %></td>
+    <td data-cell="cell_5"><%= @game.cells['cell_5'] %></td>
+  </tr>
+  <tr>
+    <td data-cell="cell_6"><%= @game.cells['cell_6'] %></td>
+    <td data-cell="cell_7"><%= @game.cells['cell_7'] %></td>
+    <td data-cell="cell_8"><%= @game.cells['cell_8'] %></td>
+  </tr>
+</table>
+<%= render 'dialog' %>
+
+<script>
+  $(document).ready(function () {
+    var user = <%= @user.present? ? @user.to_json.html_safe : false %>;
+    var session_game = <%= session[:game].present? ? session[:game].to_json.html_safe : false %>;
+    var marker = null;
+    var player_id_turn = null;
+    var player_first = null;
+    var player_second = null;
+    var cells = {cell_0: "", cell_1: "", cell_2: "", cell_3: "", cell_4: "", cell_5: "", cell_6: "", cell_7: "", cell_8: ""}
+    if(!user || !session_game || session_game.player.id != user.id) {
+      $( "#dialog" ).dialog( "open" );
+    }
+
+    window.setInterval(function(){
+      $.ajax({
+            url: "<%= trigger_game_path %>",
+            type: 'POST',
+            dataType: "json",
+            data: {id: '<%= @game.id %>'},
+            success: function(data) {
+              if (data.game.finished) {
+                window.location.href = '/'
+              } else {
+                user = data.user;
+                player_first = data.player_first;
+                player_second = data.player_second;
+                marker = user.id == data.player_first.id ? 'X' : 'O';
+                if (player_second.name) {
+                  $('#player_second').html(player_second.name);
+                  $('#player_second').attr('data-id', player_second.id);
+                }
+                if (player_first && player_second) {
+                  player_id_turn = data.game.player_id_turn;
+                  $(".players").css('background-color', '');
+                  $("[data-id='" + player_id_turn + "']").css('background-color', 'red');
+                  cells = data.game.cells;
+                  $.each(cells, function (cell_n, val) {
+                    $("[data-cell='" + cell_n + "']").html(val);
+                  })
+                }
+              }
+            }
+          });
+    }, 1000);
+
+    $('.game_board td').click(function (e) {
+      var cell = $(this);
+      var cell_n = cell.data('cell');
+      if (player_first.id && player_second.id && marker) {
+        if(player_id_turn && player_id_turn == user.id){
+          if(cell.html() == '') {
+            cell.html(marker);
+            cells[cell_n] = marker;
+            player_id_turn = user.id == player_first.id ? player_second.id : player_first.id;
+            $(".players").css('background-color', '');
+            $("[data-id='"+player_id_turn+"']").css('background-color', 'red');
+            $.ajax({
+                  url: "/games/"+<%= @game.id %>,
+                  type: 'PUT',
+                  dataType: "json",
+                  data: {game: {player_id_turn: player_id_turn, cells: cells}},
+                  success: function (data) {
+                    if(data.game.finished) {
+                      window.location.href = '/'
+                    }
+                  }
+                });
+          }
+        }
+      }
+    });
+
+  })
+</script>
